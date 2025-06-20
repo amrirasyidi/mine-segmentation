@@ -450,7 +450,8 @@ class ReadSTAC():
         # Get Item CRS in case it must be set manually
         if isinstance(items, pystac.item_collection.ItemCollection):
             # If the item is a collection, get the CRS from the first item
-            item_crs = items[0].properties["proj:epsg"]
+            proj_code = items[0].properties["proj:code"]
+            item_crs = int(proj_code.split(':')[1])
 
             # if mosaicing is not allowed, take the item with the largest overlap with the bounds
             if not allow_mosaic:
@@ -458,7 +459,8 @@ class ReadSTAC():
 
         else:
             # If the item is not a collection, get the CRS from the item
-            item_crs = items.properties["proj:epsg"]
+            proj_code = items.properties["proj:code"]
+            item_crs = int(proj_code.split(':')[1])
 
         if crop_to_bounds:
             # Slice the x and y dimensions to the original bounding box 
@@ -471,11 +473,12 @@ class ReadSTAC():
         stack = stackstac.stack(
             items, 
             resolution=(resolution, resolution), 
-            dtype="float32",
+            dtype="float64",
             assets=bands, 
             bounds=bounds, 
             epsg=item_crs,
             chunksize=chunk_size,
+            # rescale=False,
             )
 
         if isinstance(items, pystac.item.Item):
